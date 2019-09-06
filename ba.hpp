@@ -16,7 +16,6 @@ typedef double (*Function) (std::vector<double> &, std::vector<double> &,
                             std::vector<double> &);
 
 double reprojection_err(std::vector<double> &camera, std::vector<double> &point_3d, std::vector<double> & observed_2d) {
-    //TODO ..
     
     if(camera.size() != 9) {
         printf("error camera size\n");
@@ -61,9 +60,31 @@ double reprojection_err(std::vector<double> &camera, std::vector<double> &point_
 cv::Mat Jacobian(Function, cv::Mat &cameras, cv::Mat & point_3ds,
                             std::vector<unsigned> & cameraIndex, std::vector<unsigned> & pointIndex, 
                             cv::Mat & observed_2d) {
-    //TODO ...
-    cv::Mat retval;
-    return retval;
+    //TODO ... The size of Jacobian Matrix should be nItem * (nCamera*9 + nPoints*3)
+    cv::Mat Jac = cv::Mat_<double>(pointIndex.size(), cameras.rows*9 + point_3ds.rows*3);
+    std::vector <double> cam;
+    std::vector<double> pt_3d;
+    std::vector<double> obs_2d;
+    unsigned nItem = cameraIndex.size();
+    for(unsigned i = 0; i< nItem; i++) {
+        cam.clear();
+        pt_3d.clear();
+        obs_2d.clear();
+        for(int j=0; j<N_CAMERA_PARAMETER; j++) {
+            cam.push_back(cameras.at<double>(cameraIndex[i], j));
+        }
+        //get point 3d parameters at index i
+        for(int j=0; j<N_POINT_3D; j++) {
+            pt_3d.push_back(point_3ds.at<double>(pointIndex[i], j));
+        }
+        for(int j=0; j<N_OBSERVED_2D; j++) {
+            obs_2d.push_back(observed_2d.at<double>(i,j));
+        }
+        //calculate jacobian matrix
+         
+    }
+    //printf("Jacobian Matrix dimension = (%d, %d)\n",Jac.rows, Jac.cols);
+    return Jac;
 }
 double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
                             std::vector<unsigned> & cameraIndex, std::vector<unsigned> & pointIndex, 

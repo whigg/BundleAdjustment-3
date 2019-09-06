@@ -14,8 +14,9 @@ int main(int argc, char **argv) {
     printf("size camera index = %lu\n", cameraIndex.size());
     printf("size of camera = (%u, %u)\n", camera.rows, camera.cols);
     printf("size of points = (%u, %u)\n", points.rows, points.cols);
-    printf("size of camera = (%u, %u)\n", observation.rows, observation.cols);
+    printf("size of observation = (%u, %u)\n", observation.rows, observation.cols);
     double total_cost = TotalCost(reprojection_err, camera, points, cameraIndex, pointIndex, observation);
+    Jacobian(reprojection_err, camera, points, cameraIndex, pointIndex, observation);
     printf("total cost = %lf\n",total_cost);
     return 0;
 }
