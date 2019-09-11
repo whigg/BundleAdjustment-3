@@ -94,6 +94,7 @@ cv::Mat Jacobiani(Function func, cv::Mat & cameras, cv::Mat & point_3ds,
     unsigned camera_id = cameraIndex[item];
     unsigned point_id = pointIndex[item];
     //get camera parameter and 
+    // item标明了Jacobian矩阵的行， camera_id*9+[0-8]标明了camera 参数的列， cameras.rows×9+point_id*3 + [0-2]表明了point的列， point在camera后面
     return cv::Mat();
                             }
 double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
@@ -123,6 +124,8 @@ double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
         double single_error = reprojection_err(cam, pt_3d, obs_2d);
         //printf("single error =%lf\n", single_error);
         sum += single_error;
+        //TODO Jacobian i
+
     }
 }
 
