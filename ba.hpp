@@ -93,9 +93,66 @@ cv::Mat Jacobiani(Function func, cv::Mat & cameras, cv::Mat & point_3ds,
                             cv::Mat & observed_2d , int item) {
     unsigned camera_id = cameraIndex[item];
     unsigned point_id = pointIndex[item];
-    //get camera parameter and 
+    //get camera parameters and point parameters
+    std::vector<double> camera_parameters;
+    std::vector<double> point_parameters;
+    std::vector<double> observation;
+    camera_parameters.clear();
+    point_parameters.clear();
+    observation.clear();
+    for(int i=0; i<9; i++) {
+        camera_parameters.push_back(cameras.at<double>(camera_id, i));
+    }
+    for(int i=0; i<3; i++) {
+        point_parameters.push_back(point_3ds.at<double>(point_id, i));
+    }
+    observation.push_back(observed_2d.at<double>(item,0));
+    observation.push_back(observed_2d.at<double>(item,1));
     // item标明了Jacobian矩阵的行， camera_id*9+[0-8]标明了camera 参数的列， cameras.rows×9+point_id*3 + [0-2]表明了point的列， point在camera后面
-    return cv::Mat();
+    int column_dim = cameras.rows*9 + point_3ds.rows * 3;
+    printf("camera number = %i\n", column_dim);
+    cv::Mat Jaci = cv::Mat_<double>(1, column_dim);
+    for(int j=0; j < column_dim; j++)  {
+        Jaci.at<double>(0,j) = 0.0;
+    }
+    //计算相机参数的第item行对应的 jacobian
+    std::vector<double> cam1,cam2;
+    cam1.clear();
+    cam2.clear();
+    for(int i=0; i<9; i++) {
+        cam1.push_back(camera_parameters[i]);
+        cam2.push_back(camera_parameters[i]);
+    }
+    for(int i=0; i<9; i++) {
+        cam1[i] = cam1[i]+INFINITESIMAL;
+        cam2[i] = cam1[i]-INFINITESIMAL;
+        double jac = (func(cam1, point_parameters, observation) - func(cam2, point_parameters, observation))/(2.0 * INFINITESIMAL);
+        Jaci.at<double>(0, camera_id*9 + i) = jac;
+        cam1[i] = camera_parameters[i];
+        cam2[i] = camera_parameters[i];
+    }
+    //计算3d点参数的第item行对应的3d point jacobian
+    std::vector<double> pt1,pt2;
+    pt1.clear();
+    pt2.clear();
+    for(int i=0; i < 3; i++) {
+        pt1.push_back(point_parameters[i]);
+        pt2.push_back(point_parameters[i]);
+    }
+    //printf("point parameters: \n");
+    for(int i=0; i<3; i++) {
+        //printf("debug info\n");
+        //printf("pt1.size() = %lu\n", pt1.size());
+        pt1[i] = pt1[i] + INFINITESIMAL;
+        pt2[i] = pt2[i] - INFINITESIMAL;
+        //printf("debug info\n");
+        double jac = (func(camera_parameters, pt1, observation) - func(camera_parameters, pt2, observation))/(2.0 * INFINITESIMAL);
+        Jaci.at<double>(0,cameras.rows*9 + point_id * 3 + i) = jac;
+        //printf("%lf\n", )
+        pt1[i] = point_parameters[i];
+        pt2[i] = point_parameters[i];
+    }
+    return Jaci;
                             }
 double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
                             std::vector<unsigned> & cameraIndex, std::vector<unsigned> & pointIndex, 
