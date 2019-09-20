@@ -185,6 +185,10 @@ double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
 
     }
 }
+/*x[i+1] = x[i] - (H + s*I)^(-1)*f'(x[i])
+ *so, J and f'(x) are needed for each step
+ *question: how to select s. (turst region? line search?) 
+*/
 
 void LoadData(char const *file, std::vector<unsigned> &camIndex, std::vector<unsigned> & pointIndex, 
                 cv::Mat & observe, cv::Mat &camera, cv::Mat &points) {
