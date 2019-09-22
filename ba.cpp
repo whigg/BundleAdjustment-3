@@ -17,15 +17,9 @@ int main(int argc, char **argv) {
     printf("size of observation = (%u, %u)\n", observation.rows, observation.cols);
     double total_cost = TotalCost(reprojection_err, camera, points, cameraIndex, pointIndex, observation);
     printf("total cost = %lf\n",total_cost);
-    cv::Mat JacMatrix = Jacobiani(reprojection_err, camera, points, cameraIndex, pointIndex, observation,0);
-    printf("Jacobian column size = (1, %d)\n", JacMatrix.cols);
+    cv::Mat JacMatrix = Jacobian(reprojection_err, camera, points, cameraIndex, pointIndex, observation);
+    printf("Jacobian column size = (%d, %d)\n", JacMatrix.rows, JacMatrix.cols);
+    //cv::Mat Hessian = JacMatrix.t() * JacMatrix; ///Out of Memory error.
     
-    
-    
-    printf("Jacobian i = \n");
-    for(int i=0; i<JacMatrix.cols; i++) {
-        printf("%lf ", JacMatrix.at<double>(0,i));
-    }
-    printf("\n");
     return 0;
 }

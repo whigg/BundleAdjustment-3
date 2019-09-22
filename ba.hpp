@@ -110,7 +110,7 @@ cv::Mat Jacobiani(Function func, cv::Mat & cameras, cv::Mat & point_3ds,
     observation.push_back(observed_2d.at<double>(item,1));
     // item标明了Jacobian矩阵的行， camera_id*9+[0-8]标明了camera 参数的列， cameras.rows×9+point_id*3 + [0-2]表明了point的列， point在camera后面
     int column_dim = cameras.rows*9 + point_3ds.rows * 3;
-    printf("camera number = %i\n", column_dim);
+    //printf("camera number = %i\n", column_dim);
     cv::Mat Jaci = cv::Mat_<double>(1, column_dim);
     for(int j=0; j < column_dim; j++)  {
         Jaci.at<double>(0,j) = 0.0;
@@ -153,7 +153,7 @@ cv::Mat Jacobiani(Function func, cv::Mat & cameras, cv::Mat & point_3ds,
         pt2[i] = point_parameters[i];
     }
     return Jaci;
-                            }
+}
 double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
                             std::vector<unsigned> & cameraIndex, std::vector<unsigned> & pointIndex, 
                             cv::Mat & observed_2d) {
@@ -188,8 +188,24 @@ double TotalCost(Function, cv::Mat &cameras, cv::Mat & point_3ds,
 /*x[i+1] = x[i] - (H + s*I)^(-1)*f'(x[i])
  *so, J and f'(x) are needed for each step
  *question: how to select s. (turst region? line search?) 
+ * refer to numerical optimization.pdf page 27, we can find the solution.
 */
+cv::Mat Jacobian(Function func, cv::Mat & cameras, cv::Mat & point_3ds, 
+                 std::vector<unsigned> & cameraIndex, std::vector<unsigned> &pointIndex,
+                 cv::Mat & observed_2d) {
+    unsigned nitem = cameraIndex.size();
+    unsigned col = cameras.rows*9 + point_3ds.rows*3;
+    cv::Mat Jac = cv::Mat::zeros(nitem, col, CV_64F);   
+    for(int i=0; i<nitem; i++) {
+        cv::Mat jaci = Jacobiani(func, cameras, point_3ds, cameraIndex, pointIndex, observed_2d, i);
+        //printf("jaci.cols = %d\n", jaci.cols);
+        for(int j = 0; j < jaci.cols; j++) {
+            Jac.at<double>(i,j) = jaci.at<double>(0, j);
+        }
+    }
+    return Jac;
 
+}
 void LoadData(char const *file, std::vector<unsigned> &camIndex, std::vector<unsigned> & pointIndex, 
                 cv::Mat & observe, cv::Mat &camera, cv::Mat &points) {
     FILE *fp = fopen(file, "r");
