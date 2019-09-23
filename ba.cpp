@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "ba.hpp"
+#include "public.hpp"
 #include <Eigen/Eigen>
+
 
 int main(int argc, char **argv) {
     //Function func_arr[3];
@@ -19,8 +21,10 @@ int main(int argc, char **argv) {
     printf("total cost = %lf\n",total_cost);
     cv::Mat JacMatrix = Jacobian(reprojection_err, camera, points, cameraIndex, pointIndex, observation);
     printf("Jacobian column size = (%d, %d)\n", JacMatrix.rows, JacMatrix.cols);
-    //cv::Mat Hessian = JacMatrix.t() * JacMatrix; ///Out of Memory error.
     
-    
+    cv::namedWindow("bitmap", cv::WINDOW_NORMAL);
+    cv::imshow("bitmap", JacMatrix);
+    //cv::imwrite("./bitmap.jpg", JacMatrix);
+    cv::waitKey(0);
     return 0;
 }

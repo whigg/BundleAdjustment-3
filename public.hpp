@@ -4,24 +4,16 @@
 
 #include <opencv2/opencv.hpp>
 cv::Mat selfMultiply(cv::Mat const & m ) {/// return a' * a
-    int row = m.rows;
-    int col = m.cols;
-    /*
-    分块矩阵[a,b
-            c,d]
-    */
-    //cv::Mat a,b,c,d;
-    int rowa,rowd,cola,cold;
-    rowa = row/2;
-    cola = col/2;
-    rowd = row - rowa;
-    cold = col - cold;
-    cv::Mat a = cv::Mat_<double>(rowa, cola);
-    cv::Mat b = cv::Mat_<double>(rowa, cold);
-    cv::Mat c = cv::Mat_<double>(rowd, cola);
-    cv::Mat d = cv::Mat_<double>(rowd, cold);
-    //copy m to [a,b;c,d]
-
+    //assert(mul.cols == m.rows);
+    cv::Mat result = cv::Mat::zeros(m.cols, m.cols, CV_32F );
+    printf("...\n");
+    for(int i=0; i<m.cols; i++) {
+        for(int j = 0; j<m.cols; j++) {
+            for(int k = 0; k<m.rows; k++) {
+                result.at<float>(i,j) += m.at<float>(k,i) * m.at<float>(k,j);//m.at<double>(k,i)
+            }
+        }
+    }
+    return result;
 }
-
 #endif
