@@ -1,5 +1,8 @@
 # Prerequisites
 *.d
+*.pdf
+*.ps
+.vscode
 
 # Compiled Object files
 *.slo
