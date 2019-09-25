@@ -6,8 +6,8 @@
 
 int main(int argc, char **argv) {
   BAProblem problem("./data/problem-49-7776-pre.txt");
-  int pid = 0;
-  int cid = 0;
+  int pid = 1;
+  int cid = 1;
   //scanf("%d,%d", &pid, &cid);
   printf("item %d,%d = %d\n",pid, cid, problem.at(pid,cid));
   printf("projection error = %f\n", problem.pjerr(pid, cid));
