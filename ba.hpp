@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
-
+#include <math.h>
 
 #define INFINITESIMAL 1.0e-6
 #define N_CAMERA_PARAMETER 9
