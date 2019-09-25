@@ -113,7 +113,7 @@ public:
     pt = point_data[pid];
     int obs_i = this->at(pid, cid);
     Jcam = cv::Mat::zeros(1,6,CV_32F);
-    if(obs_i == -1) {
+    if(obs_i == NOT_FOUND) {
       return Jcam;
     }
     obs.pid = pid;
@@ -161,6 +161,48 @@ public:
     return Jcam;
   } 
   cv::Mat Jap(int const pid, int const cid) {
+    if(pid >= point_number || cid >= camera_number) {
+      printf("index exceeded\n");
+      exit(-1);
+    }
+    cv::Mat Jpt;
+    Camera cam;
+    Point3f pt;
+    Observation obs;
+    cam = camera_data[cid];
+    pt = point_data[pid];
+    int obs_i = this->at(pid, cid);
+    Jpt = cv::Mat::zeros(1,3, CV_32F);
+    if(obs_i == NOT_FOUND) {
+      return Jpt;
+    }
+    obs.pid = pid;
+    obs.cid = cid;
+    obs.x = observation_data[obs_i].x;
+    obs.y = observation_data[obs_i].y;
+    //jpt
+    Point3f pt2 = pt;
+    pt2.x += delta;
+    float pj1 = pjerr(cam, pt, obs);
+    float pj2 = pjerr(cam, pt2, obs);
+    Jpt.at<float>(0,0) = (pj2 - pj1)/delta;
+    pt2.x = pt.x;
+
+    pt2 = pt;
+    pt2.y += delta;
+    pj1 = pjerr(cam, pt, obs);
+    pj2 = pjerr(cam, pt2, obs);
+    Jpt.at<float>(0,1) = (pj2 - pj1)/delta;
+    pt2.y = pt.y;
+
+    pt2 = pt;
+    pt2.z += delta;
+    pj1 = pjerr(cam, pt, obs);
+    pj2 = pjerr(cam, pt2, obs);
+    Jpt.at<float>(0,2) = (pj2 - pj1)/delta;
+    pt2.z = pt.z;
+    //std::cout<<Jpt<<std::endl;
+    return Jpt;
     
   }
   void Hcam(int const pid, cv::Mat & hes) {//calculate U_i
