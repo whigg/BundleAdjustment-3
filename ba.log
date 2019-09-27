@@ -85,3 +85,9 @@ c和p是相互依赖的，不易解出， 考虑将H变换成上三角阵（行�
 
 V * p = b2 - W'*c
 
+** serious problem: precision error
+choose best delta to compute best jacobian matrix
+
+next step: 
+   1.calculate epsilon(ij).
+   2.solve equations.
