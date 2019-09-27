@@ -2,10 +2,13 @@
 #define PUBLIC_HPP
 #include <stdio.h>
 #include <vector>
+#include <iterator>
 #include <opencv2/opencv.hpp>
 
 #define NOT_FOUND -1
-float delta = 1.0e-5;
+
+typedef std::vector<std::vector<int> > Table;
+double delta = 0.00002;
 
 struct Point3f{
   float x, y, z;
@@ -31,6 +34,7 @@ private:
   std::vector<Observation> observation_data;
   std::vector<int> blocks;// blocks index for accelerating find projection(i,j)
   std::vector<int> base;//index of observation_data
+  Table captt; // camera point table captt[i] return vector containing points projected to camera i
 public:
   float pjerr(int const pid, int const cid ) {//calculate the projection error of point pid projecting to camera(cid) 
     //TODO reprojection i,j
@@ -123,41 +127,58 @@ public:
     //jcam 
     //calculate Jr
     Camera cam2 = cam;
+    Camera cam1 = cam;
     cam2.r1 += delta;
-    float pj1 = pjerr(cam, pt, obs);
+    cam1.r1 -= delta;
+    float pj1 = pjerr(cam1, pt, obs);
     float pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,0) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,0) = (pj2 - pj1)/(delta*2);
     cam2.r1 = cam.r1;
+    cam1.r1 = cam.r1;
 
     cam2.r2 += delta;
-    pj1 = pjerr(cam, pt, obs);
+    cam1.r2 -= delta;
+    pj1 = pjerr(cam1, pt, obs);
     pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,1) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,1) = (pj2 - pj1)/(2*delta);
     cam2.r2 = cam.r2;
+    cam1.r2 = cam.r2;
 
     cam2.r3 += delta;
-    pj1 = pjerr(cam, pt, obs);
+    cam1.r3 -= delta;
+
+    pj1 = pjerr(cam1, pt, obs);
     pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,2) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,2) = (pj2 - pj1)/(2*delta);
     cam2.r3 = cam.r3;
+    cam1.r3 = cam.r3;
+
     //calculate Jt
     cam2.t1 += delta;
-    pj1 = pjerr(cam, pt, obs);
+    cam1.t1 -= delta;
+
+    pj1 = pjerr(cam1, pt, obs);
     pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,3) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,3) = (pj2 - pj1)/(2*delta);
     cam2.t1 = cam.t1;
+    cam1.t1 = cam.t1;
 
     cam2.t2 += delta;
-    pj1 = pjerr(cam, pt, obs);
+    cam1.t2 -= delta;
+
+    pj1 = pjerr(cam1, pt, obs);
     pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,4) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,4) = (pj2 - pj1)/(2*delta);
     cam2.t2 = cam.t2;
+    cam1.t2 = cam.t2;
 
     cam2.t3 += delta;
-    pj1 = pjerr(cam, pt, obs);
+    cam1.t3 -= delta;
+    pj1 = pjerr(cam1, pt, obs);
     pj2 = pjerr(cam2, pt, obs);
-    Jcam.at<float>(0,5) = (pj2 - pj1)/delta;
+    Jcam.at<float>(0,5) = (pj2 - pj1)/(2*delta);
     cam2.t3 = cam.t3;
+    cam1.t3 = cam.t3;
     return Jcam;
   } 
   cv::Mat Jap(int const pid, int const cid) {
@@ -182,34 +203,79 @@ public:
     obs.y = observation_data[obs_i].y;
     //jpt
     Point3f pt2 = pt;
+    Point3f pt1 = pt;
     pt2.x += delta;
-    float pj1 = pjerr(cam, pt, obs);
+    pt1.x -= delta;
+    float pj1 = pjerr(cam, pt1, obs);
     float pj2 = pjerr(cam, pt2, obs);
-    Jpt.at<float>(0,0) = (pj2 - pj1)/delta;
+    Jpt.at<float>(0,0) = (pj2 - pj1)/(2*delta);
     pt2.x = pt.x;
+    pt1.x = pt.x;
 
     pt2 = pt;
+    pt1 = pt;
     pt2.y += delta;
-    pj1 = pjerr(cam, pt, obs);
+    pt1.y -= delta;
+    pj1 = pjerr(cam, pt1, obs);
     pj2 = pjerr(cam, pt2, obs);
-    Jpt.at<float>(0,1) = (pj2 - pj1)/delta;
+    Jpt.at<float>(0,1) = (pj2 - pj1)/(2*delta);
     pt2.y = pt.y;
+    pt1.y = pt.y;
 
     pt2 = pt;
+    pt1 = pt;
     pt2.z += delta;
+    pt1.z -= delta;
+
     pj1 = pjerr(cam, pt, obs);
     pj2 = pjerr(cam, pt2, obs);
-    Jpt.at<float>(0,2) = (pj2 - pj1)/delta;
+    Jpt.at<float>(0,2) = (pj2 - pj1)/(2*delta);
     pt2.z = pt.z;
+    pt1.z = pt.z;
     //std::cout<<Jpt<<std::endl;
     return Jpt;
     
   }
-  void Hcam(int const pid, cv::Mat & hes) {//calculate U_i
-      std::vector<int> cid;
-      cid.clear();
-      this->at(pid, cid);
-      hes = cv::Mat();
+  cv::Mat U(int const cid) {//calculate U_j
+      if(cid >= camera_number) {printf("index exceeded\n"); exit(-1);}
+      std::vector<int> pid_vec;
+      pid_vec.clear();
+      pid_vec = captt[cid];
+      cv::Mat Uj = cv::Mat::zeros(6,6,CV_32F);
+      for(std::vector<int>::iterator it = pid_vec.begin(); it!= pid_vec.end(); it++) {
+        int pid = *it;
+        cv::Mat jac = this->Jac(pid, cid);
+        Uj += jac.t() * jac;
+      }
+      return Uj;
+  }
+  cv::Mat V(int const pid) {//calculate V_i
+    if(pid >= point_number) {printf("index exceeded\n"); exit(-1);}
+    std::vector<int> vcid;
+    vcid.clear();
+    this->at(pid, vcid);
+    printf("vcid size = %lu\n", vcid.size());
+    cv::Mat Vi = cv::Mat::zeros(3,3,CV_32F) ;
+    for(std::vector<int>::iterator iter = vcid.begin(); iter != vcid.end(); iter++) {
+      int cid = *iter;
+      printf("cid = %d\n", cid);
+      cv::Mat Bij = this->Jap(pid, cid);
+      Vi += Bij.t() * Bij;
+    }
+    return Vi;
+  }
+  cv::Mat W(int const pid, int const cid) {
+    if(pid >= point_number || cid >= camera_number) {
+      printf("index exceeded\n");
+      exit(-1);
+    }
+    cv::Mat wij = cv::Mat::zeros(6,3, CV_32F);
+    if(this->at(pid,cid)== NOT_FOUND) 
+      return wij;
+    cv::Mat Aij = Jac(pid, cid);
+    cv::Mat Bij = Jap(pid, cid);
+    wij = Aij.t() * Bij;
+    return wij;
   }
   BAProblem(char const * file_name ) {//load data
     FILE * fp = fopen(file_name, "r");
@@ -227,12 +293,18 @@ public:
     base.clear();
     int current_pid = 0;
     int current_pid_num = 0;
+    for(int i=0; i<camera_number; i++) {
+      std::vector<int> empty_vec;
+      empty_vec.clear();
+      captt.push_back(empty_vec);
+    }
     for(int i=0; i<observation_number; i++) {
       Observation obs;
       fscanf(fp, "%d", &(obs.cid));
       fscanf(fp, "%d", &(obs.pid));
       fscanf(fp, "%f", &(obs.x));
       fscanf(fp, "%f", &(obs.y));
+      captt[obs.cid].push_back(obs.pid);
       if(current_pid == obs.pid) {
 	      //printf("obs.pid = %d\n", obs.pid);
 	      current_pid_num++;
@@ -300,12 +372,16 @@ public:
       cid.push_back(obs.cid);
     }
   }
-  void print_blocks() {
-    //printf("%d\n", base.size());
-    // for(int i=0; i<blocks.size(); i++) {
-    //   printf("%d %d, ", base[i],blocks[i]);
-    // }
-    // printf("\n");
+  void print_table(int cid) {
+    if(cid >= this->camera_number) {
+      return;
+    }
+    printf("point :\n");
+    for(int i=0; i<captt[cid].size(); i++) {
+      printf("%d ", captt[cid][i]);
+    }
+    printf("projected to camera %d\n", cid);
+    printf("\n");
   }
 };
   

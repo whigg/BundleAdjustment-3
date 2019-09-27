@@ -4,7 +4,7 @@ CC = g++
 
 ba: ba.o
 	${CC} ba.o -o ba ${LLIB_OPENCV}
-ba.o: ba.cpp ba.hpp public.hpp
+ba.o: ba.cpp public.hpp
 	${CC} -c ba.cpp
 
 .PHONY : clean
