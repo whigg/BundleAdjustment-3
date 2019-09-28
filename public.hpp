@@ -36,7 +36,7 @@ private:
   std::vector<int> base;//index of observation_data
   Table captt; // camera point table captt[i] return vector containing points projected to camera i
 public:
-  float pjerr(int const pid, int const cid ) {//calculate the projection error of point pid projecting to camera(cid) 
+  float pjerr(int const pid, int const cid ) const {//calculate the projection error of point pid projecting to camera(cid) 
     //TODO reprojection i,j
     int obs_i = this->at(pid, cid);
     if(obs_i == NOT_FOUND) {
@@ -76,7 +76,7 @@ public:
     float d2 = fabs(Xp.at<float>(1,0) - obsy);
     return d1+d2;
   }
-  float pjerr(Camera const &cam, Point3f const &pt, Observation const & obs) {
+  float pjerr(Camera const &cam, Point3f const &pt, Observation const & obs) const {
     cv::Mat rvec = cv::Mat_<float>(1,3);
     rvec.at<float>(0,0) = cam.r1;
     rvec.at<float>(0,1) = cam.r2;
@@ -104,7 +104,8 @@ public:
     float d2 = fabs(Xp.at<float>(1,0) - obs.y);
     return d1+d2;
   }
-  cv::Mat Jac(int const pid, int const cid) {
+
+  cv::Mat Jac(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("index exceeded\n");
       exit(-1);
@@ -181,7 +182,7 @@ public:
     cam1.t3 = cam.t3;
     return Jcam;
   } 
-  cv::Mat Jap(int const pid, int const cid) {
+  cv::Mat Jap(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("index exceeded\n");
       exit(-1);
@@ -236,7 +237,7 @@ public:
     return Jpt;
     
   }
-  cv::Mat U(int const cid) {//calculate U_j
+  cv::Mat U(int const cid) const {//calculate U_j
       if(cid >= camera_number) {printf("index exceeded\n"); exit(-1);}
       std::vector<int> pid_vec;
       pid_vec.clear();
@@ -249,7 +250,7 @@ public:
       }
       return Uj;
   }
-  cv::Mat V(int const pid) {//calculate V_i
+  cv::Mat V(int const pid) const {//calculate V_i
     if(pid >= point_number) {printf("index exceeded\n"); exit(-1);}
     std::vector<int> vcid;
     vcid.clear();
@@ -264,7 +265,7 @@ public:
     }
     return Vi;
   }
-  cv::Mat W(int const pid, int const cid) {
+  cv::Mat W(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("index exceeded\n");
       exit(-1);
@@ -276,6 +277,33 @@ public:
     cv::Mat Bij = Jap(pid, cid);
     wij = Aij.t() * Bij;
     return wij;
+  }
+  cv::Mat epsilon_cam(int const cid) const {
+    //find pid correspoinding to cid
+    std::vector<int> pid_vec;
+    pid_vec.clear();
+    pid_vec = this->captt[cid];
+    cv::Mat epsa = cv::Mat::zeros(6,1,CV_32F);
+    for(auto it = pid_vec.begin(); it != pid_vec.end(); it++) {
+      int pid = *it;
+      cv::Mat jacm = this->Jac(pid, cid);
+      float e = this->pjerr(pid, cid);
+      epsa += jacm.t() * e;
+    }
+    return epsa;
+  }
+  cv::Mat epsilon_pt(int const pid) const {
+    std::vector<int> cid_vec;
+    cid_vec.clear();
+    this->at(pid, cid_vec);
+    cv::Mat epsb = cv::Mat::zeros(3,1,CV_32F);
+    for(auto it = cid_vec.begin(); it!=cid_vec.end(); it++) {
+      int cid = *it;
+      cv::Mat japm = this->Jap(pid, cid);
+      float e = this->pjerr(pid, cid);
+      epsb += japm.t() * e;
+    }
+    return epsb;
   }
   BAProblem(char const * file_name ) {//load data
     FILE * fp = fopen(file_name, "r");
@@ -317,7 +345,7 @@ public:
     }
     blocks.push_back(current_pid_num);
     base.push_back(0);
-    for(int i=0; i<blocks.size(); i++) {
+    for(unsigned i=0; i<blocks.size(); i++) {
       base.push_back(base[i] + blocks[i]);
     }
     for(int i=0; i<camera_number; i++) {
@@ -342,7 +370,7 @@ public:
     }
     fclose(fp);
   }
-  int at(int const pid, int const cid) {
+  int at(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("point index or camera index exceeded\n");
       exit(-1);
@@ -358,7 +386,7 @@ public:
     }
     return NOT_FOUND;
   }
-  void at(int const pid, std::vector<int> &cid) {
+  void at(int const pid, std::vector<int> &cid) const {
     if(pid >= point_number) {
       printf("point index exceeded\n");
       exit(-1);
@@ -372,12 +400,12 @@ public:
       cid.push_back(obs.cid);
     }
   }
-  void print_table(int cid) {
+  void print_table(int cid) const {
     if(cid >= this->camera_number) {
       return;
     }
     printf("point :\n");
-    for(int i=0; i<captt[cid].size(); i++) {
+    for(unsigned i=0; i<captt[cid].size(); i++) {
       printf("%d ", captt[cid][i]);
     }
     printf("projected to camera %d\n", cid);
