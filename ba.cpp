@@ -9,5 +9,6 @@ int main(int argc, char **argv) {
   int cid = 1;
   cv::Mat epsa = problem.epsilon_cam(cid);
   std::cout<<epsa<<std::endl;
+  problem.print_table(1);
   return 0;
 }

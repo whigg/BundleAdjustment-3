@@ -9,6 +9,8 @@
 
 typedef std::vector<std::vector<int> > Table;
 double delta = 0.00002;
+//typedef float CameraPose[6]; //camera Pose parameters r1, r2, r3, t1, t2, t3, to be optimized;
+//typedef float PointParameter[3];//3D point x, y, z to be optimized
 
 struct Point3f{
   float x, y, z;
@@ -32,6 +34,8 @@ private:
   std::vector<Point3f> point_data;
   std::vector<Camera> camera_data;
   std::vector<Observation> observation_data;
+  std::vector<cv::Mat> da;//delta a 
+  std::vector<cv::Mat> db;//delta b
   std::vector<int> blocks;// blocks index for accelerating find projection(i,j)
   std::vector<int> base;//index of observation_data
   Table captt; // camera point table captt[i] return vector containing points projected to camera i
@@ -348,6 +352,7 @@ public:
     for(unsigned i=0; i<blocks.size(); i++) {
       base.push_back(base[i] + blocks[i]);
     }
+    this->da.clear();
     for(int i=0; i<camera_number; i++) {
       Camera cam;
       fscanf(fp, "%f", &(cam.r1));
@@ -359,14 +364,28 @@ public:
       fscanf(fp, "%f", &(cam.f));
       fscanf(fp, "%f", &(cam.k1));
       fscanf(fp, "%f", &(cam.k2));
+      cv::Mat cp = cv::Mat_<float>(6,1);
+      cp.at<float>(0,0) = cam.r1;
+      cp.at<float>(1,0) = cam.r2;
+      cp.at<float>(2,0) = cam.r3;
+      cp.at<float>(3,0) = cam.t1;
+      cp.at<float>(4,0) = cam.t2;
+      cp.at<float>(5,0) = cam.t3;
+      da.push_back(cp);
       camera_data.push_back(cam);
     } 
+    this->db.clear();
     for(int i=0; i<point_number; i++) {
       Point3f pt;
+      cv::Mat pp = cv::Mat_<float>(3,1);
       fscanf(fp, "%f", &(pt.x));
       fscanf(fp, "%f", &(pt.y));
       fscanf(fp, "%f", &(pt.z));
       point_data.push_back(pt);
+      pp.at<float>(0,0) = pt.x;
+      pp.at<float>(1,0) = pt.y;
+      pp.at<float>(2,0) = pt.z;
+      db.push_back(pp);
     }
     fclose(fp);
   }
@@ -410,6 +429,7 @@ public:
     }
     printf("projected to camera %d\n", cid);
     printf("\n");
+    printf("parameter size = %lu, %lu\n", this->da.size(), this->db.size());
   }
 };
   
