@@ -31,6 +31,8 @@ private:
   int camera_number;
   int point_number;
   int observation_number;
+  float tau; // if x* is a good approximation tau can be set as a small float number like 1e-6, otherwise
+               // set tau = 1e-3 or even 1
   std::vector<Point3f> point_data;
   std::vector<Camera> camera_data;
   std::vector<Observation> observation_data;
@@ -254,6 +256,22 @@ public:
       }
       return Uj;
   }
+  cv::Mat Us(int const cid) const { // caluclate U_j^*
+    // TODO
+    cv::Mat Uj = U(cid);
+    double u = tau * maxd(Uj);
+    //printf("u = %f\n", u);
+    cv::Mat mu = u * cv::Mat::eye(Uj.rows,Uj.cols, CV_32F);
+    return mu+Uj;
+  }
+  float maxd(cv::Mat const diag) const {
+    int m = diag.rows <= diag.cols ?diag.rows : diag.cols;
+    int maximum = diag.at<float>(0,0);
+    for(int i=0; i<m; i++){
+      maximum = maximum > diag.at<float>(i,i) ? maximum:diag.at<float>(i,i);
+    }
+    return maximum;
+  }
   cv::Mat V(int const pid) const {//calculate V_i
     if(pid >= point_number) {printf("index exceeded\n"); exit(-1);}
     std::vector<int> vcid;
@@ -269,6 +287,13 @@ public:
     }
     return Vi;
   }
+  cv::Mat Vs(int const pid) const {//calculate Vi*
+    cv::Mat Vi = V(pid);
+    double u = tau * maxd(Vi);
+    cv::Mat mu = u * cv::Mat::eye(Vi.rows, Vi.cols, CV_32F);
+    return mu + Vi;
+  }
+  
   cv::Mat W(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("index exceeded\n");
@@ -310,6 +335,7 @@ public:
     return epsb;
   }
   BAProblem(char const * file_name ) {//load data
+    tau = 1.0e-4; // set tau here
     FILE * fp = fopen(file_name, "r");
     if(!fp) {
       perror("error opening file\n");

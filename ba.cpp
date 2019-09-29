@@ -5,10 +5,12 @@
 
 int main(int argc, char **argv) {
   BAProblem problem("./data/problem-49-7776-pre.txt");
-  //int pid = 7000;
-  int cid = 1;
-  cv::Mat epsa = problem.epsilon_cam(cid);
-  std::cout<<epsa<<std::endl;
-  problem.print_table(1);
+  cv::Mat U = problem.U(1);
+  cv::Mat Us = problem.Us(1);
+  float factor = 1e-6;
+  Us = factor*Us;
+  std::cout<<"Us = \n"<<Us<<std::endl;
+  std::cout<<"Us.inv.inv = \n"<<Us.inv(cv::DECOMP_SVD).inv()-Us<<std::endl;
+  
   return 0;
 }
