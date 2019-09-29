@@ -18,7 +18,12 @@ struct Point3f{
 
 struct Camera {
   float r1, r2, r3, t1, t2, t3, f, k1,k2;
-  
+  // public:
+  // float operator[](int i){
+  //   if(i == 1)
+  //     return r1;
+  //   return r2;
+  //}
 };
 struct Observation{
   int cid;
@@ -293,7 +298,11 @@ public:
     cv::Mat mu = u * cv::Mat::eye(Vi.rows, Vi.cols, CV_32F);
     return mu + Vi;
   }
-  
+  cv::Mat Y(int const pid, int const cid) const {
+    cv::Mat Vsi = this->Vs(pid);
+    cv::Mat wij = this->W(pid, cid);
+    return wij * Vsi.inv();
+  }
   cv::Mat W(int const pid, int const cid) const {
     if(pid >= point_number || cid >= camera_number) {
       printf("index exceeded\n");
@@ -333,6 +342,29 @@ public:
       epsb += japm.t() * e;
     }
     return epsb;
+  }
+  cv::Mat S(int const j, int const k) const {
+    //TODO
+    cv::Mat Usjk = Us(j);//j==k
+    int r = Usjk.rows;
+    int c = Usjk.cols;
+    if(j != k) {
+      Usjk = cv::Mat::zeros(r,c,CV_32F);
+    }
+    cv::Mat YW = cv::Mat::zeros(r, c, CV_32F);
+
+    for(int i=0; i<point_number; i++) {
+      YW += Y(i,j) * W(i,k).t();
+    }
+    return Usjk - YW;
+  }
+  void solve_lineq(){
+    //TODO
+    return;
+  }
+  void solve_lm(){
+    //TODO
+    return;
   }
   BAProblem(char const * file_name ) {//load data
     tau = 1.0e-4; // set tau here
