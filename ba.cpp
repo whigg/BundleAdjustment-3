@@ -5,7 +5,10 @@
 
 int main(int argc, char **argv) {
   BAProblem problem("./data/problem-49-7776-pre.txt");
-  std::cout<<problem.S(0,0)<<std::endl;
   
+  cv::Mat sm = problem.SM();
+  
+  std::cout<<sm.size()<<std::endl;
+  //std::cout<<problem.S(1,1)<<std::endl;
   return 0;
 }

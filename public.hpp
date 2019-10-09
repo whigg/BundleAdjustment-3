@@ -18,12 +18,27 @@ struct Point3f{
 
 struct Camera {
   float r1, r2, r3, t1, t2, t3, f, k1,k2;
-  // public:
-  // float operator[](int i){
-  //   if(i == 1)
-  //     return r1;
-  //   return r2;
-  //}
+  public:
+  float operator[](int i){
+    if(i == 0)
+      return r1;
+    if(i == 1) 
+      return r2;
+    if(i == 2) 
+      return r3;
+    if(i == 3) 
+      return t1;
+    if(i == 4) 
+      return t2;
+    if(i == 5) 
+      return t3;
+    if(i == 6) 
+      return f;
+    if(i == 7) 
+      return k1;
+    if(i == 8) 
+      return k2;
+  }
 };
 struct Observation{
   int cid;
@@ -282,11 +297,11 @@ public:
     std::vector<int> vcid;
     vcid.clear();
     this->at(pid, vcid);
-    printf("vcid size = %lu\n", vcid.size());
+    //printf("vcid size = %lu\n", vcid.size());
     cv::Mat Vi = cv::Mat::zeros(3,3,CV_32F) ;
     for(std::vector<int>::iterator iter = vcid.begin(); iter != vcid.end(); iter++) {
       int cid = *iter;
-      printf("cid = %d\n", cid);
+      //printf("cid = %d\n", cid);
       cv::Mat Bij = this->Jap(pid, cid);
       Vi += Bij.t() * Bij;
     }
@@ -352,17 +367,47 @@ public:
       Usjk = cv::Mat::zeros(r,c,CV_32F);
     }
     cv::Mat YW = cv::Mat::zeros(r, c, CV_32F);
-
-    for(int i=0; i<point_number; i++) {
+    int cid = j;
+    std::vector<int> vpid = captt[cid];
+    for(std::vector<int>::iterator it=vpid.begin(); it!=vpid.end(); it++) {
+      int i = *it;
       YW += Y(i,j) * W(i,k).t();
     }
     return Usjk - YW;
   }
-  void solve_lineq(){
-    //TODO
+  cv::Mat e(int const cid)const {
+    //epsilon_cam(cid) - sum(Y(pid, cid) * epsilon_pt(pid));
+    cv::Mat s= cv::Mat::zeros(6,1, CV_32F) ;
+    std::vector<int> vpid = captt[cid];
+    for(std::vector<int>::iterator it = vpid.begin(); it!= vpid.end(); it++) {
+      int pid = *it;
+      s += Y(pid, cid)*epsilon_pt(pid);
+    }
+    return epsilon_cam(cid) - s;
+  }
+  cv::Mat SM() {
+    cv::Mat sm;
+    std::vector<cv::Mat> col;
+    std::vector<cv::Mat> row;
+    row.clear();
+    for(int i=0; i<camera_number; i++ ) {
+      col.clear();
+      cv::Mat colm;
+      for(int j=0; j<camera_number; j++) {
+        cv::Mat s = S(i,j);
+        col.push_back(s);
+      }
+      cv::hconcat(col, colm);
+      row.push_back(colm);
+    }
+    cv::vconcat(row, sm);
+    return sm;
+  }
+  void solve_lineq(){//solve linear equation and store delta a and delta b to da,db
+    
     return;
   }
-  void solve_lm(){
+  void solve_lm(){ //solve linear
     //TODO
     return;
   }
