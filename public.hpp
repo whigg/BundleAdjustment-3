@@ -385,6 +385,15 @@ public:
     }
     return epsilon_cam(cid) - s;
   }
+  cv::Mat em() const {
+    std::vector<cv::Mat> ve;
+    for(int cid=0; cid<camera_number; cid++) {
+      ve.push_back(e(cid));
+    }
+    cv::Mat re;//return e
+    cv::vconcat(ve, re);
+    return re;
+  }
   cv::Mat SM() {
     cv::Mat sm;
     std::vector<cv::Mat> col;
