@@ -61,6 +61,8 @@ private:
   std::vector<int> blocks;// blocks index for accelerating find projection(i,j)
   std::vector<int> base;//index of observation_data
   Table captt; // camera point table captt[i] return vector containing points projected to camera i
+  //cv::Mat pcam;
+  //cv::Mat ppt; 
 public:
   float pjerr(int const pid, int const cid ) const {//calculate the projection error of point pid projecting to camera(cid) 
     //TODO reprojection i,j
@@ -413,8 +415,18 @@ public:
     return sm;
   }
   void solve_lineq(){//solve linear equation and store delta a and delta b to da,db
-    
-    return;
+    cv::Mat sm = SM();
+    cv::Mat em = this->em();
+    cv::Mat a;
+    cv::solve(sm, em, a);
+    //cv::Mat temp = cv::Mat_<float>(6,1);
+    // for(int i=0; i<camera_number; i++) {
+    //   for(int j=0; j<6; j++) {
+    //     temp.at<float>(j,0) = a.at<float>(i*6+j);
+    //   }
+    //   da[i] = temp.clone();
+    // }
+
   }
   void solve_lm(){ //solve linear
     //TODO
@@ -531,17 +543,8 @@ public:
       cid.push_back(obs.cid);
     }
   }
-  void print_table(int cid) const {
-    if(cid >= this->camera_number) {
-      return;
-    }
-    printf("point :\n");
-    for(unsigned i=0; i<captt[cid].size(); i++) {
-      printf("%d ", captt[cid][i]);
-    }
-    printf("projected to camera %d\n", cid);
-    printf("\n");
-    printf("parameter size = %lu, %lu\n", this->da.size(), this->db.size());
+  void test() const {
+    ;
   }
 };
   
