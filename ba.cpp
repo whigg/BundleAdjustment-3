@@ -14,5 +14,6 @@ int main(int argc, char **argv) {
 
   //std::cout<<delta_a<<std::endl;
   problem.solve_lineq();
+  problem.test();
   return 0;
 }
