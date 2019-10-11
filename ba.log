@@ -93,7 +93,9 @@ V * p = b2 - W'*c
 
 equation solved, with error.
 b is too large ,apparantly it is wrong. 
-
+三个目标： 1. 改成用符号计算的方法来计算Jacobian矩阵
+          2.保存中间变量，U* V* W 避免不必要的计算
+          3.把OpenCV库替换成Eigen库,Eigen库的矩阵运算效率更高
 
 ** serious problem: precision error
 1. choose best delta to compute best jacobian matrix

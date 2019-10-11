@@ -107,7 +107,7 @@ public:
     cv::Mat Xp = f * rho * Xc;
     float d1 = fabs(Xp.at<float>(0,0) - obsx);
     float d2 = fabs(Xp.at<float>(1,0) - obsy);
-    return d1+d2;
+    return sqrt(d1*d1+d2*d2);
   }
   float pjerr(Camera const &cam, Point3f const &pt, Observation const & obs) const {
     cv::Mat rvec = cv::Mat_<float>(1,3);
@@ -135,7 +135,7 @@ public:
     cv::Mat Xp = f * rho * Xc;
     float d1 = fabs(Xp.at<float>(0,0) - obs.x);
     float d2 = fabs(Xp.at<float>(1,0) - obs.y);
-    return d1+d2;
+    return sqrt(d1*d1+d2*d2);
   }
 
   cv::Mat Jac(int const pid, int const cid) const {
@@ -425,6 +425,7 @@ public:
     cv::Mat em = this->em();
     cv::Mat a;
     cv::solve(sm, em, a);
+    std::cout<<"a = \n"<<a<<std::endl;
     std::vector<cv::Mat> dta;//delta a
     dta.clear();
     cv::Mat temp = cv::Mat_<float>(6,1);
@@ -573,9 +574,47 @@ public:
       cid.push_back(obs.cid);
     }
   }
-  void test() const {
-    std::cout<<"dp = \n"<<dp<<std::endl;
+  void test() {
+    // cv::Mat sm = this->SM();
+    // //cv::Mat sm = cv::Mat_<float>(294,294);
+    // cv::Mat em = this->em();
+    // cv::Mat a;
+    // cv::solve(sm, em, a);
+    // std::vector<cv::Mat> dta;//delta a
+    // dta.clear();
+    // cv::Mat temp = cv::Mat_<float>(6,1);
+    // for(int i=0; i<camera_number; i++) {
+    //   for(int j=0; j<6; j++) {
+    //     temp.at<float>(j,0) = a.at<float>(i*camera_number+j,0);
+    //   }
+    //   dta.push_back(temp.clone());
+    // }
+    // //std::cout<<"debug"<<std::endl;
+    // cv::Mat b;
+    // std::vector<cv::Mat> dtb;
+    // temp = cv::Mat_<float>(3,1);
+    // for(int pid = 0; pid < point_number; pid++) {
+    //   std::vector<int> vcid;
+    //   this->at(pid, vcid);
+    //   cv::Mat vsinv = this->Vs(pid).inv();
+    //   cv::Mat epsb = this->epsilon_pt(pid);
+    //   cv::Mat sum = cv::Mat::zeros(3,1,CV_32F);
+    //   //std::cout<<W(pid, 0).rows<<", "<< W(pid, 0).cols<<std::endl;
+    //   for(auto it = vcid.begin(); it != vcid.end(); it++) {
+    //     int cid = *it;
+
+    //     sum += this->W(pid, cid).t()*dta[cid];
+    //   }
+    //   std::cout<<"sum = \n";
+    //   std::cout<<sum<<std::endl;
+    //   dtb.push_back(vsinv*(epsb - sum));
+    // }
+    
+    // cv::vconcat(dtb, b);
+    // cv::vconcat(a,b, dp);
+    std::cout<<this->W(0,0).t()<<std::endl;
   }
+    
 };
   
 
