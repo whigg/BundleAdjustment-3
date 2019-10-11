@@ -58,6 +58,11 @@ private:
   std::vector<Observation> observation_data;
   std::vector<cv::Mat> da;//delta a 
   std::vector<cv::Mat> db;//delta b
+  cv::Mat p;
+  cv::Mat g;
+  cv::Mat dp;
+  int k;
+  int v ;
   std::vector<int> blocks;// blocks index for accelerating find projection(i,j)
   std::vector<int> base;//index of observation_data
   Table captt; // camera point table captt[i] return vector containing points projected to camera i
@@ -416,24 +421,49 @@ public:
   }
   void solve_lineq(){//solve linear equation and store delta a and delta b to da,db
     cv::Mat sm = SM();
+    //cv::Mat sm = cv::Mat_<float>(294,294);
     cv::Mat em = this->em();
     cv::Mat a;
     cv::solve(sm, em, a);
-    //cv::Mat temp = cv::Mat_<float>(6,1);
-    // for(int i=0; i<camera_number; i++) {
-    //   for(int j=0; j<6; j++) {
-    //     temp.at<float>(j,0) = a.at<float>(i*6+j);
-    //   }
-    //   da[i] = temp.clone();
-    // }
+    std::vector<cv::Mat> dta;//delta a
+    dta.clear();
+    cv::Mat temp = cv::Mat_<float>(6,1);
+    for(int i=0; i<camera_number; i++) {
+      for(int j=0; j<6; j++) {
+        temp.at<float>(j,0) = a.at<float>(i*camera_number+j,0);
+      }
+      dta.push_back(temp.clone());
+    }
+    //std::cout<<"debug"<<std::endl;
+    cv::Mat b;
+    std::vector<cv::Mat> dtb;
+    temp = cv::Mat_<float>(3,1);
+    for(int pid = 0; pid < point_number; pid++) {
+      std::vector<int> vcid;
+      this->at(pid, vcid);
+      cv::Mat vsinv = this->Vs(pid).inv();
+      cv::Mat epsb = this->epsilon_pt(pid);
+      cv::Mat sum = cv::Mat::zeros(3,1,CV_32F);
+      //std::cout<<W(pid, 0).rows<<", "<< W(pid, 0).cols<<std::endl;
+      for(auto it = vcid.begin(); it != vcid.end(); it++) {
+        int cid = *it;
 
+        sum += this->W(pid, cid).t()*dta[cid];
+      }
+      std::cout<<"sum = \n";
+      std::cout<<sum<<std::endl;
+      dtb.push_back(vsinv*(epsb - sum));
+    }
+    
+    cv::vconcat(dtb, b);
+    cv::vconcat(a,b, dp);
   }
   void solve_lm(){ //solve linear
     //TODO
     return;
   }
   BAProblem(char const * file_name ) {//load data
-    tau = 1.0e-4; // set tau here
+    tau = 1.0e-6; // set tau here
     FILE * fp = fopen(file_name, "r");
     if(!fp) {
       perror("error opening file\n");
@@ -544,7 +574,7 @@ public:
     }
   }
   void test() const {
-    ;
+    std::cout<<"dp = \n"<<dp<<std::endl;
   }
 };
   
