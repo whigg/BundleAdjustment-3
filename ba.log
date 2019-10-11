@@ -88,7 +88,12 @@ V * p = b2 - W'*c
 ** next step: 
    1.calculate epsilon(ij). solved
    2.solve equations.       TODO
-   
+
+2019.10.11
+
+equation solved, with error.
+b is too large ,apparantly it is wrong. 
+
 
 ** serious problem: precision error
 1. choose best delta to compute best jacobian matrix
