@@ -6,7 +6,7 @@ CFLAGS = -std=c++11 -Wall
 
 ba: ba.o
 	${CC} ba.o -o ba ${LLIB_OPENCV}
-ba.o: ba.cpp public.hpp
+ba.o: ba.cpp ba.hpp
 	${CC} -c ba.cpp ${CFLAGS} 
 
 .PHONY : clean
