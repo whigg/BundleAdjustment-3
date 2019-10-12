@@ -102,3 +102,7 @@ b is too large ,apparantly it is wrong.
 2. choose tau to best approximate 
 3. Value of Us is too high such that Us.inv.inv - Us >> 0 , introduce scale factor to solve this problem, but how to choose the best scale factor?
 4. u = max{aii}, but size of A is too large we cannot look for the best u . is there a local best u?
+
+
+2019.10.12 
+计算Jacobian矩阵，考虑使用符号计算
