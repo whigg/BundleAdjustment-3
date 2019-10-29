@@ -2,7 +2,7 @@
 //#include "ba.hpp"
 #include "ba.hpp"
 #include <Eigen/Eigen>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
 
 class Cell{
   
@@ -29,17 +29,21 @@ int main(int argc, char **argv) {
   // }
   // std::cout<<delta_a<<std::endl;
   //problem.test();
-  cv::Mat src = cv::Mat_<float>(3,1);
-  src.at<float>(0,0) = 1.5741515942940262e-02;
-  src.at<float>(1,0) = -1.2790936163850642e-02;
-  src.at<float>(2,0) = -4.4008498081980789e-03;
-  cv::Mat dst;
-  cv::Rodrigues(src, dst);
-  std::cout<<dst<<std::endl;
-  Eigen::Matrix<double, 3,1> rvec;
-  rvec << 1.5741515942940262e-02, -1.2790936163850642e-02, -4.4008498081980789e-03;
-  Eigen::Matrix<double,3,3> rotm;
-  rodrigues(rvec, rotm);
-  std::cout<<rotm<<std::endl;
+  //cv::Mat src = cv::Mat_<float>(3,1);
+  //src.at<float>(0,0) = 1.5741515942940262e-02;
+  //src.at<float>(1,0) = -1.2790936163850642e-02;
+  //src.at<float>(2,0) = -4.4008498081980789e-03;
+  //cv::Mat dst;
+  //cv::Rodrigues(src, dst);
+  //std::cout<<dst<<std::endl;
+  int pid = 2;
+  int cid = 3;
+  printf("at %d, %d = %lf\n",pid, cid, problem.repj_err(pid,cid));
+  Eigen::Vector3d a ;
+  a<<1.0, 1.0, 1.0;
+  printf("norm = %lf\n", a.norm());
+  Eigen::VectorXd b ;
+  b = a.transpose()*a;
+  printf("norm = %lf\n",sqrt(b(0,0)));
   return 0;
 }

@@ -5,7 +5,7 @@ CC = g++
 CFLAGS = -std=c++11 -Wall
 
 ba: ba.o
-	${CC} ba.o -o ba ${LLIB_OPENCV}
+	${CC} ba.o -o ba 
 ba.o: ba.cpp ba.hpp
 	${CC} -c ba.cpp ${CFLAGS} 
 

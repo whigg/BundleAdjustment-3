@@ -87,12 +87,46 @@ struct BAProblem{
     double tau;
   public:
     //reprojection error of point pid projected to cid
-    double repj_err(int const pid, int const cid) {
-      
+    double repj_err(int const pid, int const cid)const {
+	int obs_i = this->at(pid, cid);
+	if(obs_i == NOT_FOUND) {
+	  return 0.0;
+	}
+	float obsx, obsy;
+	obsx = observation_data[obs_i].x;
+	obsy = observation_data[obs_i].y;
+	Camera cam = camera_data[cid];
+	Point3f pt = point_data[pid];
+	Eigen::Vector3d rvec;
+	rvec(0,0) = cam.r1;
+	rvec(1,0) = cam.r2;
+	rvec(2,0) = cam.r3;
+	float f = cam.f;
+	float k1 = cam.k1;
+	float k2 = cam.k2;
+	Eigen::Vector3d t;
+	t(0) = cam.t1;
+	t(1) = cam.t2;
+	t(2) = cam.t3;
+	Eigen::Matrix3d rotm;
+	rodrigues(rvec, rotm);
+	Eigen::Vector3d Xw ;
+	Xw << pt.x, pt.y, pt.z;
+	Eigen::Vector3d Xc = rotm * Xw + t;
+	Xc = -Xc/Xc(2);
+	double l1 = Xc.norm();
+	double l2 = l1*l1;
+	double rho = 1.0 + k1 * l1*l1 + k2 * l2*l2;
+	printf("rho = %lf\n", rho);
+	Eigen::Vector3d Xp = f*rho*Xc;
+	float d1 = fabs(Xp(0,0) - obsx);
+	float d2 = fabs(Xp(1,0) - obsy);
+	return sqrt(d1*d1+d2*d2);	  
     }
+  
     int at(int const pid, int const cid) const {
       if(pid >= point_number || cid >= camera_number) {
-        printf("point index or camera index exceeded\n");
+      	printf("point index or camera index exceeded\n");
         exit(-1);
       }
       int base = this->base[pid];
