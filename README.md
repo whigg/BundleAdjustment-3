@@ -6,7 +6,7 @@ You can refer to the data set at [Bundle Adjustment in the large](http://grail.c
 
 
 # Dependencies 
-[OpenCV](https://www.opencv.org,"opencv")4.0.1 or higher is needed in this project.
+Eigen
 
 # Build project
 
