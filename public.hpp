@@ -293,7 +293,7 @@ public:
   }
   float maxd(cv::Mat const diag) const {
     int m = diag.rows <= diag.cols ?diag.rows : diag.cols;
-    int maximum = diag.at<float>(0,0);
+    double maximum = diag.at<float>(0,0);
     for(int i=0; i<m; i++){
       maximum = maximum > diag.at<float>(i,i) ? maximum:diag.at<float>(i,i);
     }
